@@ -11,15 +11,15 @@ namespace PDFDemo.Services
     public class DocumentService : IDocumentService
     {
         private readonly IConverter _converter;
-        private readonly IRazorRendererHelper _razorPartialToStringRenderer;
+        private readonly IRazorRendererHelper _razorRendererHelper;
         
 
         public DocumentService(
             IConverter converter,
-            IRazorRendererHelper razorPartialToStringRenderer)
+            IRazorRendererHelper razorRendererHelper)
         {
             _converter = converter;
-            _razorPartialToStringRenderer = razorPartialToStringRenderer;
+            _razorRendererHelper = razorRendererHelper;
         }
 
         public byte[] GeneratePdfFromString()
@@ -48,16 +48,16 @@ namespace PDFDemo.Services
         {
             var invoiceViewModel = GetInvoiceModel();
             var partialName = "/Views/PdfTemplate/InvoiceDetails.cshtml";
-            var htmlContent = _razorPartialToStringRenderer.RenderPartialToString(partialName, invoiceViewModel);
+            var htmlContent = _razorRendererHelper.RenderPartialToString(partialName, invoiceViewModel);
             
             return GeneratePdf(htmlContent);
         }
 
         private byte[] GeneratePdf(string htmlContent)
         {
-            var globalSettings = new DinkToPdf.GlobalSettings
+            var globalSettings = new GlobalSettings
             {
-                ColorMode = 0,
+                ColorMode = ColorMode.Color,
                 Orientation = Orientation.Portrait,
                 PaperSize = PaperKind.A4,
                 Margins = new MarginSettings { Top = 18, Bottom = 18 },
@@ -68,8 +68,8 @@ namespace PDFDemo.Services
                 PagesCount = true,
                 HtmlContent = htmlContent,
                 WebSettings = { DefaultEncoding = "utf-8" },
-                HeaderSettings = null,
-                FooterSettings = null,
+                HeaderSettings = { FontSize = 10, Right = "Page [page] of [toPage]", Line = true },
+                FooterSettings = { FontSize = 8, Center = "PDF demo from JeminPro", Line = true },
             };
 
             var htmlToPdfDocument = new HtmlToPdfDocument()
